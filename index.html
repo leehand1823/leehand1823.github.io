@@ -1,1 +1,71 @@
-<h1>welcome</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容查看器</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        #loading { color: #666; }
+        #error { color: red; display: none; }
+        /* 让内容看起来像一张纸 */
+        #content {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background: #fff;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">正在加载内容...</div>
+    <div id="error"></div>
+    <div id="content" style="display:none;"></div>
+
+    <script>
+        // 解决中文乱码的 Base64 解码函数
+        function b64DecodeUnicode(str) {
+            try {
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            } catch (e) {
+                return null;
+            }
+        }
+
+        window.onload = function() {
+            // 1. 获取 URL 中的参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('data');
+
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const contentDiv = document.getElementById('content');
+
+            if (encodedData) {
+                // 2. 解码内容
+                const decodedContent = b64DecodeUnicode(encodedData);
+
+                if (decodedContent) {
+                    // 3. 显示内容 (支持 HTML)
+                    loadingDiv.style.display = 'none';
+                    contentDiv.innerHTML = decodedContent; // 如果是纯文本，可以用 innerText
+                    contentDiv.style.display = 'block';
+                } else {
+                    loadingDiv.style.display = 'none';
+                    errorDiv.innerText = "错误：Base64 解码失败，链接可能不完整。";
+                    errorDiv.style.display = 'block';
+                }
+            } else {
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = "<h1>欢迎!</h1><p>请通过 Python 生成的链接访问此页面。</p>";
+                contentDiv.style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>
