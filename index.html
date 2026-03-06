@@ -3,69 +3,382 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>内容查看器</title>
+    <title>AI模型分析报告</title>
+    <!-- Marked.js - Markdown解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-        #loading { color: #666; }
-        #error { color: red; display: none; }
-        /* 让内容看起来像一张纸 */
-        #content {
-            border: 1px solid #ddd;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px 50px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* Markdown 渲染样式 */
+        .content {
+            font-size: 15px;
+        }
+
+        .content h1 {
+            color: #667eea;
+            font-size: 24px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin: 30px 0 20px 0;
+        }
+
+        .content h2 {
+            color: #667eea;
+            font-size: 20px;
+            border-bottom: 1px solid #e8e8e8;
+            padding-bottom: 8px;
+            margin: 25px 0 15px 0;
+        }
+
+        .content h3 {
+            color: #444;
+            font-size: 17px;
+            margin: 20px 0 12px 0;
+        }
+
+        .content p {
+            margin: 12px 0;
+        }
+
+        /* 表格样式 */
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .content th, .content td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        .content th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .content tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .content tr:hover {
+            background: #e8f4f8;
+        }
+
+        /* 引用块样式 - 用于结论 */
+        .content blockquote {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-left: 5px solid #4caf50;
+            padding: 20px 25px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 16px;
+        }
+
+        .content blockquote p {
+            margin: 8px 0;
+        }
+
+        /* 代码样式 */
+        .content code {
+            background: #f5f5f5;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #e91e63;
+        }
+
+        .content pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            background: #fff;
-            min-height: 200px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .content pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        /* 列表样式 */
+        .content ul, .content ol {
+            padding-left: 30px;
+            margin: 15px 0;
+        }
+
+        .content li {
+            margin: 8px 0;
+        }
+
+        /* 分隔线 */
+        .content hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 30px 0;
+        }
+
+        /* 强调文本 */
+        .content strong {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .content em {
+            color: #666;
+            font-style: italic;
+        }
+
+        /* 风险等级颜色 */
+        .content p:has(🔴), .content li:has(🔴) {
+            color: #f44336;
+        }
+
+        .content p:has(🟡), .content li:has(🟡) {
+            color: #ff9800;
+        }
+
+        .content p:has(🟢), .content li:has(🟢) {
+            color: #4caf50;
+        }
+
+        /* 错误提示 */
+        .error {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border: 1px solid #ef9a9a;
+            color: #c62828;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .error h2 {
+            margin-bottom: 10px;
+            border: none;
+        }
+
+        /* 页脚 */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e8e8e8;
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        /* 加载动画 */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #667eea;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .content table {
+                font-size: 12px;
+            }
+            .content th, .content td {
+                padding: 8px;
+            }
         }
     </style>
 </head>
 <body>
-
-    <div id="loading">正在加载内容...</div>
-    <div id="error"></div>
-    <div id="content" style="display:none;"></div>
+    <div class="container">
+        <div class="header">
+            <h1>📊 AI模型分析报告</h1>
+            <div class="subtitle" id="subtitle">CVR模型离线评估</div>
+        </div>
+        <div class="content" id="content">
+            <div class="loading">正在加载报告内容</div>
+        </div>
+        <div class="footer">
+            Powered by <a href="#">AI Model Analyzer</a> |
+            Generated at <span id="timestamp"></span>
+        </div>
+    </div>
 
     <script>
-        // 解决中文乱码的 Base64 解码函数
-        function b64DecodeUnicode(str) {
+        // 从 URL 参数获取数据
+        function getUrlParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 解码 Base64 (支持中文 UTF-8)
+        function decodeBase64(str) {
             try {
-                return decodeURIComponent(atob(str).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
+                // 先进行 URL 解码（处理 %2B %2F %3D 等）
+                str = decodeURIComponent(str);
+                // Base64 解码
+                const binaryStr = atob(str);
+                // UTF-8 解码
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                return new TextDecoder('utf-8').decode(bytes);
             } catch (e) {
+                console.error('Base64 decode error:', e);
                 return null;
             }
         }
 
-        window.onload = function() {
-            // 1. 获取 URL 中的参数
-            const urlParams = new URLSearchParams(window.location.search);
-            const encodedData = urlParams.get('data');
-
-            const loadingDiv = document.getElementById('loading');
-            const errorDiv = document.getElementById('error');
-            const contentDiv = document.getElementById('content');
-
-            if (encodedData) {
-                // 2. 解码内容
-                const decodedContent = b64DecodeUnicode(encodedData);
-
-                if (decodedContent) {
-                    // 3. 显示内容 (支持 HTML)
-                    loadingDiv.style.display = 'none';
-                    contentDiv.innerHTML = decodedContent; // 如果是纯文本，可以用 innerText
-                    contentDiv.style.display = 'block';
-                } else {
-                    loadingDiv.style.display = 'none';
-                    errorDiv.innerText = "错误：Base64 解码失败，链接可能不完整。";
-                    errorDiv.style.display = 'block';
-                }
-            } else {
-                loadingDiv.style.display = 'none';
-                contentDiv.innerHTML = "<h1>欢迎!</h1><p>请通过 Python 生成的链接访问此页面。</p>";
-                contentDiv.style.display = 'block';
+        // 渲染 Markdown
+        function renderMarkdown(content) {
+            if (typeof marked !== 'undefined') {
+                // 配置 marked
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true
+                });
+                return marked.parse(content);
             }
-        };
+            // 简单的备用 Markdown 处理
+            return content
+                .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/^> (.*$)/gm, '<blockquote><p>$1</p></blockquote>')
+                .replace(/^- (.*$)/gm, '<li>$1</li>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // 主函数
+        function init() {
+            const contentEl = document.getElementById('content');
+            const timestampEl = document.getElementById('timestamp');
+
+            // 设置时间戳
+            timestampEl.textContent = new Date().toLocaleString('zh-CN');
+
+            // 获取 data 参数
+            const data = getUrlParam('data');
+
+            if (!data) {
+                contentEl.innerHTML = `
+                    <div class="error">
+                        <h2>⚠️ 无法加载报告</h2>
+                        <p>URL 中未找到 data 参数</p>
+                        <p style="margin-top:15px;font-size:12px;color:#888;">
+                            请确保链接格式正确: ?data=Base64编码内容
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 解码内容
+            const content = decodeBase64(data);
+
+            if (!content) {
+                contentEl.innerHTML = `
+                    <div class="error">
+                        <h2>⚠️ 解码失败</h2>
+                        <p>无法解析报告内容</p>
+                        <p style="margin-top:15px;font-size:12px;color:#888;">
+                            Base64 解码出错，请检查链接是否完整
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 渲染 Markdown
+            contentEl.innerHTML = renderMarkdown(content);
+
+            // 更新页面标题
+            const h1Match = content.match(/^#\s+(.+)$/m);
+            if (h1Match) {
+                document.title = h1Match[1] + ' - AI分析报告';
+            }
+        }
+
+        // 页面加载完成后执行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 </html>
